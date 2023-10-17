@@ -1,18 +1,17 @@
-import {createContext, useContext, useEffect, useState} from 'react'
+import {createContext, useState} from 'react'
 import Home from './components/Home'
 import SignIn from './components/SignIn'
 import {LinearProgress} from '@mui/material'
-
 export const UserContext = createContext({})
 export const LoadingContext = createContext({})
 export const UserThemeContext = createContext({})
 export const NotificationContext = createContext({})
 
 import { createTheme } from '@mui/material/styles';
-import { green, purple, red, blue, grey, yellow } from '@mui/material/colors';
+import { green, red, blue, grey, yellow } from '@mui/material/colors';
 import {ThemeProvider} from '@emotion/react'
 
-export const installedThemes = {
+export const installedThemes: any = {
   blue: createTheme({
     palette: {
       primary: {
@@ -66,8 +65,6 @@ export const installedThemes = {
 }
 
 import * as React from 'react';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, { AlertColor, AlertProps } from '@mui/material/Alert';
 
@@ -79,9 +76,8 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
 });
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [open, setOpen] = useState(true)
 
   const closeNotification = () => {
     setNotification({message: '', severity: 'success'})
@@ -98,11 +94,6 @@ function App() {
       },
     },
   }));
-  useEffect(() => {
-    setTimeout(() => {
-      setNotification({message: 'hi', severity: 'error'})
-  }, 3000)
-  }, [])
   return (
     <ThemeProvider theme={theme}>
       <NotificationContext.Provider value={[notification, setNotification]}>

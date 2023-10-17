@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {useContext, useEffect} from 'react';
 import Avatar from '@mui/material/Avatar';
 import * as yup from 'yup';
 import Button from '@mui/material/Button';
@@ -10,12 +10,8 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {useFormik} from 'formik';
-import {LoadingContext, UserContext} from '../App';
-
-interface SignInPayload {
-  email: string
-  password: string
-}
+import {LoadingContext, NotificationContext, UserContext} from '../App';
+import {getProfileApi, signInApi, SignInPayload} from '../api/auth';
 
 function Copyright(props: any) {
   return (
@@ -27,13 +23,12 @@ function Copyright(props: any) {
   );
 }
 
-// TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
 
 const validationSchema = yup.object({
   email: yup
     .string()
-    .email('Enter a valid email')
+    // .email('Enter a valid email')
     .required('Email is required'),
   password: yup
     .string()
@@ -41,11 +36,10 @@ const validationSchema = yup.object({
     .required('Password is required'),
 });
 
-export const api = (user: any) => new Promise(r => setTimeout(r, 3000))
-
 export default function SignIn() {
-  const [isLoggedIn, setIsLoggedIn] = React.useContext<any>(UserContext)
-  const [_, setIsLoading] = React.useContext<any>(LoadingContext)
+  const [, setIsLoggedIn] = useContext<any>(UserContext)
+  const [, setNotification] = useContext<any>(NotificationContext)
+  const [, setIsLoading] = useContext<any>(LoadingContext)
   const signInForm = useFormik<SignInPayload>({
     initialValues: {
       email: '',
@@ -54,23 +48,29 @@ export default function SignIn() {
     validationSchema: validationSchema,
     onSubmit: async (values) => {
       setIsLoading(true)
-      await api(values)
+      try {
+        await signInApi(values)
+      } catch (e: any) {
+        setNotification({message: e.message, severity: 'error'})
+        return
+      } finally {
+        setIsLoading(false)
+      }
       setIsLoggedIn(true)
-      setIsLoading(false)
     },
   });
 
-  // const [email, setEmail] = React.useState({
-  //   value: '',
-  //   isError: false,
-  //   helperText: ''
-  // })
-  // const [password, setPassword] = React.useState({
-  //   value: '',
-  //   isError: ,
-  //   helperText: ''
-  // },
-
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        await getProfileApi()
+        setIsLoggedIn(true)
+      } catch (e) {
+        setIsLoggedIn(false)
+      }
+    }
+    checkSession()
+  }, [])
 
   return (
     <ThemeProvider theme={defaultTheme}>

@@ -1,7 +1,6 @@
-import {useContext, useEffect} from "react"
+import {useContext, useEffect, useState} from "react"
 import {LoadingContext, NotificationContext, UserContext, UserThemeContext, installedThemes} from "../App"
 
-import * as React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -13,8 +12,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import {Container, InputLabel, MenuItem, Select, SelectChangeEvent} from "@mui/material";
-import {api} from "./SignIn";
+import {Container, Grid, MenuItem, Select, SelectChangeEvent} from "@mui/material";
+import {getProfileApi, signOutApi, updateProfileApi} from "../api/auth";
 
 function BasicCard() {
   return (
@@ -44,73 +43,96 @@ function BasicCard() {
 
 export default function ButtonAppBar() {
 
-  const [isLoggedIn, setIsLoggedIn] = React.useContext<any>(UserContext)
-  const [preference, setPreference] = React.useState('green')
+  const [, setIsLoggedIn] = useContext<any>(UserContext)
+  const [preference, setPreference] = useState('green')
   const [, setTheme] = useContext<any>(UserThemeContext)
   const [, setNotification] = useContext<any>(NotificationContext)
-  const [, setIsLoading] = React.useContext<any>(LoadingContext)
+  const [, setIsLoading] = useContext<any>(LoadingContext)
   const changePreference = async (event: SelectChangeEvent) => {
-    // setTheme(installedThemes[event.target.value])
-    // setIsLoading(true)
-    // await api({})
-    // setIsLoading(false)
-    // setTheme(installedThemes[event.target.value])
+    setTheme(installedThemes[event.target.value])
+    setIsLoading(true)
+    await updateProfileApi(event.target.value)
     setPreference(event.target.value)
-    // console.log('changed preference')
+    setIsLoading(false)
+    setPreference(event.target.value)
   }
   useEffect(() => {
-    const updatePreference = async () => {
-      setTheme(installedThemes[preference])
+    const setInitialPrefernce = async () => {
       setIsLoading(true)
-      // await api({})
+      const response = await getProfileApi()
       setIsLoading(false)
-      setTheme(installedThemes[preference])
-      console.log('changed preference')
-      setNotification({message: 'hi', severity: 'success'})
+      setTheme(installedThemes[response.data.preference])
+      setPreference(response.data.preference)
+      setNotification({message: 'Restored preference', severity: 'success'})
     }
-    updatePreference()
-  }, [preference])
+    setInitialPrefernce()
+  }, [])
 
-  const handleSignout = () => {
-    setIsLoggedIn(false)
+  const handleSignout = async () => {
+    try {
+      await signOutApi()
+      setIsLoggedIn(false)
+    } catch (e: any) {
+      setNotification({message: e.message, severity: 'error'})
+    }
   }
   return (
     <Container maxWidth="xl">
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar color="secondary" position="static">
-        <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Demo
-          </Typography>
-          <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select-standard"
-            value={preference}
-            onChange={changePreference}
-            label="Preferences"
-            defaultValue="Ten"
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar color="secondary" position="static">
+          <Toolbar>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
             >
-            {Object.keys(installedThemes).map((theme, i) => <MenuItem key={i} value={theme}>{theme.toUpperCase()}</MenuItem>)}
-          </Select>
-          <Button color="inherit" onClick={handleSignout}>Sign out</Button>
-        </Toolbar>
-      </AppBar>
-    </Box>
-
-      <BasicCard />
-      <BasicCard />
-
-      <BasicCard />
-      <BasicCard />
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Demo
+            </Typography>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select-standard"
+              value={preference}
+              onChange={changePreference}
+              label="Preferences"
+              defaultValue="Ten"
+            >
+              {Object.keys(installedThemes).map((theme, i) => <MenuItem key={i} value={theme}>{theme.toUpperCase()}</MenuItem>)}
+            </Select>
+            <Button color="inherit" onClick={handleSignout}>Sign out</Button>
+          </Toolbar>
+        </AppBar>
+      </Box>
+      <Grid container spacing={2}>
+        <Grid item xs={8}>
+          <BasicCard />
+        </Grid>
+        <Grid item xs={4}>
+          <BasicCard />
+        </Grid>
+        <Grid item xs={4}>
+          <BasicCard />
+        </Grid>
+        <Grid item xs={8}>
+          <BasicCard />
+        </Grid>
+        <Grid item xs={8}>
+          <BasicCard />
+        </Grid>
+        <Grid item xs={4}>
+          <BasicCard />
+        </Grid>
+        <Grid item xs={4}>
+          <BasicCard />
+        </Grid>
+        <Grid item xs={8}>
+          <BasicCard />
+        </Grid>
+      </Grid>
     </Container>
   );
 }
